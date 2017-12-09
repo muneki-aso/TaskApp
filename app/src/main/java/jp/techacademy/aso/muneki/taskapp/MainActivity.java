@@ -4,6 +4,7 @@ import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.icu.text.StringSearch;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
@@ -52,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
         searchButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                EditText searchEdit = (EditText) findViewById(R.Id.search);
+                EditText searchEdit = (EditText) findViewById(R.id.search_text);
                 String searchText = searchEdit.getText().toString();
                 if (searchText.length() == 0) {
                     reloadListView();
@@ -139,6 +140,17 @@ public class MainActivity extends AppCompatActivity {
         RealmResults<Task> taskRealmResults = mRealm.where(Task.class).findAllSorted("date", Sort.DESCENDING);
         // 上記の結果を、TaskList としてセットする
         mTaskAdapter.setTaskList(mRealm.copyFromRealm(taskRealmResults));
+        // TaskのListView用のアダプタに渡す
+        mListView.setAdapter(mTaskAdapter);
+        // 表示を更新するために、アダプターにデータが変更されたことを知らせる
+        mTaskAdapter.notifyDataSetChanged();
+    }
+
+    private void reloadListView(String search) {
+        // Realmデータベースから、「全てのデータを取得して新しい日時順に並べた結果」を取得
+        RealmResults<Task> results = mRealm.where(Task.class).equalTo("category", search).findAllSorted("date", Sort.DESCENDING);
+        // 上記の結果を、TaskList としてセットする
+        mTaskAdapter.setTaskList(mRealm.copyFromRealm(results));
         // TaskのListView用のアダプタに渡す
         mListView.setAdapter(mTaskAdapter);
         // 表示を更新するために、アダプターにデータが変更されたことを知らせる
